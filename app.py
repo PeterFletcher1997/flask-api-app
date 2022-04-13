@@ -1,5 +1,5 @@
 from flask import Flask, request
-from import_files import return_json, success_email
+from import_files import format_json, success_email
 
 post_url = "https://webhook.site/9a227568-3994-4c29-9006-0762865b808b"
 
@@ -13,8 +13,12 @@ def homepage():
 def receive_webhook():
     payload = request.json
     if request.method == 'POST':
-        return_json(payload, post_url)
-        success_email(payload)
+        format_json(payload, post_url)
+        try:
+            success_email(payload)
+        except Exception:
+            raise Exception("Email was not sent due to error")
+
 
         return 'success', 200
 
