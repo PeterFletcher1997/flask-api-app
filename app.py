@@ -1,7 +1,8 @@
 from flask import Flask, request
 from import_files import format_json, success_email
+from enviro_variables import SEND_URL
 
-post_url = "https://webhook.site/9a227568-3994-4c29-9006-0762865b808b"
+post_url = SEND_URL
 
 app = Flask(__name__)
 

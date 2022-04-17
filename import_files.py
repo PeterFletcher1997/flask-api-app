@@ -1,10 +1,10 @@
 import requests
 import json
 import smtplib
-import os
+from enviro_variables import TO_EMAIL, FROM_EMAIL, FROM_PASS
 
-SEND_EMAIL = os.environ.get('GEAR_EMAIL')
-SEND_PASS = os.environ.get('GEAR_PASS')
+
+
 #todo fix email log in issues
 
 
@@ -14,7 +14,7 @@ def success_email(payload):
         smtp.starttls()
         smtp.ehlo()
 
-        smtp.login(SEND_EMAIL, SEND_PASS)
+        smtp.login(FROM_EMAIL, FROM_PASS)
 
         order_number = payload['order']['number']
         creation = payload['order']['createdAt']
@@ -23,7 +23,7 @@ def success_email(payload):
         body =f'{order_number} was uploaded at {creation}'
         msg = f'Subject: {subject}\n\n{body}'
 
-        smtp.sendmail(SEND_EMAIL, SEND_EMAIL, msg)
+        smtp.sendmail(TO_EMAIL, FROM_EMAIL, msg)
 
 def sale_line_items(payload):
     empty_dict = {"SaleLine": []}
