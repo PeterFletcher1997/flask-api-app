@@ -21,8 +21,8 @@ def success_email(payload):
         smtp.ehlo()
         smtp.starttls()
         smtp.ehlo()
-        # TODO look into how long everything takes, this process is slowing things down quite a bit
         smtp.login(FROM_EMAIL, FROM_PASS)
+        # TODO look into how long everything takes, this process is slowing things down quite a bit
 
         order_number = payload['order']['number']
         creation = payload['order']['createdAt']
@@ -40,7 +40,7 @@ def sale_line_items(payload):
     for key in payload['order']['products']['resource']['embedded']:
         quantity = key['quantityOrdered']
         price = key['basePriceExcl']
-        sku = key['variant']['resource']['sku']
+        sku = key['sku']
 
         empty_dict['SaleLine'].append(
             {"itemCode": sku,
@@ -71,36 +71,33 @@ def format_json(payload, url):
     if all(quebec_sale):
         if all(amazon_order_conditions):
             amazon_dict = {
+                "completed": "true",
+                "enablePromotions": "true",
+                "referenceNumber": payload['order']['number'],
+                "customerID": payload['order']['customer']['resource']['id'],
                 "employeeID": 1,
                 "registerID": 1,
                 "shopID": 1,
-                "enablePromotions": "true",
-                "isTaxInclusive": "false",
-                "customerID": payload['order']['customer']['resource']['id'],
-                "completed": "true",
-                "referenceNumber": payload['order']['number'],
-                "SaleLines": sale_line_items(payload),
                 "taxCategoryID": "14",
-                # todo figure out tax category for entire sale
-            }
+                "SaleLines": sale_line_items(payload)}
 
             amazon_shipping_dict = {
+                "completed": "true",
+                "enablePromotions": "true",
+                "referenceNumber": payload['order']['number'],
+                "customerID": payload['order']['customer']['resource']['id'],
                 "employeeID": 1,
                 "registerID": 1,
                 "shopID": 1,
-                "enablePromotions": "true",
-                "customerID": payload['order']['customer']['resource']['id'],
-                "completed": "true",
-                "referenceNumber": payload['order']['number'],
+                "taxCategoryID": "14",
                 "SaleLines": {"SaleLine": [{
-                    "itemID": 210000028217,
+                    "itemID": "210000028217",
                     "unitQuantity": 1,
                     "unitPrice": payload['order']['shipmentBasePriceExcl'],
                     "tax": "true",
                     "tax1Rate": "0.05",
                     "tax2Rate": "0.09975",
-                }]},
-                "taxCategoryID": "2"}
+                }]}}
 
             requests.post(url, data=json.dumps(amazon_dict),  headers=headers)
             requests.post(url, data=json.dumps(amazon_shipping_dict), headers=headers)
@@ -109,35 +106,33 @@ def format_json(payload, url):
 
         elif all(shipping_paid_condition):
             order_with_shipping_dict = {
+                "completed": "true",
+                "enablePromotions": "true",
+                "referenceNumber": payload['order']['number'],
+                "customerID": payload['order']['customer']['resource']['id'],
                 "employeeID": 1,
                 "registerID": 1,
                 "shopID": 1,
-                "enablePromotions": "true",
-                "customerID": payload['order']['customer']['resource']['id'],
-                "completed": "true",
-                "referenceNumber": payload['order']['number'],
+                "taxCategoryID": "14",
                 "SaleLines": {"SaleLine": [{
                     "itemID": 210000028217,
-                    "unitQuantity": 1,
+                    "unitQuantity": "1",
                     "unitPrice": payload['order']['shipmentBasePriceExcl'],
                     "tax": "true",
                     "tax1Rate": "0.05",
                     "tax2Rate": "0.09975",
-                }]},
-                "taxCategoryID": "2"}
+                }]}}
 
             shipping_dict = {
+                "completed": "true",
+                "enablePromotions": "true",
+                "referenceNumber": payload['order']['number'],
+                "customerID": payload['order']['customer']['resource']['id'],
                 "employeeID": 1,
                 "registerID": 1,
                 "shopID": 1,
-                "enablePromotions": "true",
-                "customerID": payload['order']['customer']['resource']['id'],
-                "completed": "true",
-                "referenceNumber": payload['order']['number'],
-                "SaleLines": sale_line_items(payload),
                 "taxCategoryID": "14",
-                # todo figure out tax category for entire sale
-            }
+                "SaleLines": sale_line_items(payload)}
 
             requests.post(url, data=json.dumps(order_with_shipping_dict), headers=headers)
             requests.post(url, data=json.dumps(shipping_dict), headers=headers)
@@ -146,17 +141,15 @@ def format_json(payload, url):
 
         else:
             order_no_shipping_dict = {
+                "completed": "true",
+                "enablePromotions": "true",
+                "referenceNumber": payload['order']['number'],
+                "customerID": payload['order']['customer']['resource']['id'],
                 "employeeID": 1,
                 "registerID": 1,
                 "shopID": 1,
-                "enablePromotions": "true",
-                "customerID": payload['order']['customer']['resource']['id'],
-                "completed": "true",
-                "referenceNumber": payload['order']['number'],
-                "SaleLines": sale_line_items(payload),
                 "taxCategoryID": "14",
-                # todo figure out tax category for entire sale
-            }
+                "SaleLines": sale_line_items(payload)}
 
             requests.post(url, data=json.dumps(order_no_shipping_dict), headers=headers)
 
