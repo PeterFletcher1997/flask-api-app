@@ -1,11 +1,19 @@
 import requests
 import json
 import smtplib
-from enviro_variables import TO_EMAIL, FROM_EMAIL, FROM_PASS
+from enviro_variables import TO_EMAIL, FROM_EMAIL, FROM_PASS, CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN
 
 
-
-#todo fix email log in issues
+# def generate_new_token():
+#     url = "https://cloud.lightspeedapp.com/oauth/access_token.php"
+#     refresh_payload = {
+#         'refresh_token': REFRESH_TOKEN,
+#         'client_secret': CLIENT_SECRET,
+#         'client_id': CLIENT_ID,
+#         'grant_type': 'refresh_token'}
+#     r = requests.get(url, data=refresh_payload).json()
+#     access_token = r["access_token"]
+#     return {"authorization": f"Bearer {access_token}"}
 
 
 def success_email(payload):
@@ -13,17 +21,18 @@ def success_email(payload):
         smtp.ehlo()
         smtp.starttls()
         smtp.ehlo()
-
+        # TODO look into how long everything takes, this process is slowing things down quite a bit
         smtp.login(FROM_EMAIL, FROM_PASS)
 
         order_number = payload['order']['number']
         creation = payload['order']['createdAt']
 
         subject = f'{order_number} Successfully Uploaded'
-        body =f'{order_number} was uploaded at {creation}'
+        body = f'{order_number} was uploaded at {creation}'
         msg = f'Subject: {subject}\n\n{body}'
 
         smtp.sendmail(TO_EMAIL, FROM_EMAIL, msg)
+
 
 def sale_line_items(payload):
     empty_dict = {"SaleLine": []}
@@ -31,10 +40,10 @@ def sale_line_items(payload):
     for key in payload['order']['products']['resource']['embedded']:
         quantity = key['quantityOrdered']
         price = key['basePriceExcl']
-        variant_id = key['variant']['resource']['id']
+        sku = key['variant']['resource']['sku']
 
         empty_dict['SaleLine'].append(
-            {"itemID": variant_id,
+            {"itemCode": sku,
              "quantityOrdered": quantity,
              "unitPrice": price,
              "taxCategoryID": "1",
@@ -46,6 +55,7 @@ def sale_line_items(payload):
 
     return empty_dict
 
+
 def format_json(payload, url):
     condition_1 = payload['order']['addressShippingRegion']
     condition_2 = payload['order']['status']
@@ -56,6 +66,8 @@ def format_json(payload, url):
     amazon_order_conditions = ['amazon' in condition_3]
     shipping_paid_condition = [condition_4 != 0.00]
 
+    headers = {"authorization": "Bearer 1345891846"}
+
     if all(quebec_sale):
         if all(amazon_order_conditions):
             amazon_dict = {
@@ -63,7 +75,8 @@ def format_json(payload, url):
                 "registerID": 1,
                 "shopID": 1,
                 "enablePromotions": "true",
-                "customerID": 8,
+                "isTaxInclusive": "false",
+                "customerID": payload['order']['customer']['resource']['id'],
                 "completed": "true",
                 "referenceNumber": payload['order']['number'],
                 "SaleLines": sale_line_items(payload),
@@ -76,7 +89,7 @@ def format_json(payload, url):
                 "registerID": 1,
                 "shopID": 1,
                 "enablePromotions": "true",
-                "customerID": 8,
+                "customerID": payload['order']['customer']['resource']['id'],
                 "completed": "true",
                 "referenceNumber": payload['order']['number'],
                 "SaleLines": {"SaleLine": [{
@@ -89,8 +102,8 @@ def format_json(payload, url):
                 }]},
                 "taxCategoryID": "2"}
 
-            requests.post(url, data=json.dumps(amazon_dict),  headers={'Content-Type': 'application/json'})
-            requests.post(url, data=json.dumps(amazon_shipping_dict), headers={'Content-Type': 'application/json'})
+            requests.post(url, data=json.dumps(amazon_dict),  headers=headers)
+            requests.post(url, data=json.dumps(amazon_shipping_dict), headers=headers)
 
             return 'success', 200
 
@@ -100,7 +113,7 @@ def format_json(payload, url):
                 "registerID": 1,
                 "shopID": 1,
                 "enablePromotions": "true",
-                "customerID": 8,
+                "customerID": payload['order']['customer']['resource']['id'],
                 "completed": "true",
                 "referenceNumber": payload['order']['number'],
                 "SaleLines": {"SaleLine": [{
@@ -118,7 +131,7 @@ def format_json(payload, url):
                 "registerID": 1,
                 "shopID": 1,
                 "enablePromotions": "true",
-                "customerID": 8,
+                "customerID": payload['order']['customer']['resource']['id'],
                 "completed": "true",
                 "referenceNumber": payload['order']['number'],
                 "SaleLines": sale_line_items(payload),
@@ -126,8 +139,8 @@ def format_json(payload, url):
                 # todo figure out tax category for entire sale
             }
 
-            requests.post(url, data=json.dumps(order_with_shipping_dict), headers={'Content-Type': 'application/json'})
-            requests.post(url, data=json.dumps(shipping_dict), headers={'Content-Type': 'application/json'})
+            requests.post(url, data=json.dumps(order_with_shipping_dict), headers=headers)
+            requests.post(url, data=json.dumps(shipping_dict), headers=headers)
 
             return 'success', 200
 
@@ -137,7 +150,7 @@ def format_json(payload, url):
                 "registerID": 1,
                 "shopID": 1,
                 "enablePromotions": "true",
-                "customerID": 8,
+                "customerID": payload['order']['customer']['resource']['id'],
                 "completed": "true",
                 "referenceNumber": payload['order']['number'],
                 "SaleLines": sale_line_items(payload),
@@ -145,6 +158,6 @@ def format_json(payload, url):
                 # todo figure out tax category for entire sale
             }
 
-            requests.post(url, data=json.dumps(order_no_shipping_dict), headers={'Content-Type': 'application/json'})
+            requests.post(url, data=json.dumps(order_no_shipping_dict), headers=headers)
 
             return 'success', 200
