@@ -1,6 +1,6 @@
 # Flask-Lightspeed-App
 
-### Receives incoming webhooks from lightpeed ecom and posts re-formated json to ligthspeed retail. 
+### Receives incoming webhooks from lightpeed ecom and posts a re-formated json to ligthspeed retail. 
 The purpose of this app is to assist stores with the lightspeed omnichannel solution that are having issues with Quebec orders not leaving the lightpseed ecom inventory. 
 </br></br>
 #### Required evironment variables for the contianer:
