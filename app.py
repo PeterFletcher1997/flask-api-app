@@ -5,11 +5,6 @@ from enviro_variables import SEND_URL
 app = Flask(__name__)
 
 
-@app.route('/')
-def homepage():
-    return '<h1>main page</h2>'
-
-
 @app.route('/webhook', methods=['POST'])
 def receive_webhook():
     payload = request.json

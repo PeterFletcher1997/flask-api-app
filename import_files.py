@@ -4,16 +4,16 @@ import smtplib
 from enviro_variables import TO_EMAIL, FROM_EMAIL, FROM_PASS, CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN
 
 
-# def generate_new_token():
-#     url = "https://cloud.lightspeedapp.com/oauth/access_token.php"
-#     refresh_payload = {
-#         'refresh_token': REFRESH_TOKEN,
-#         'client_secret': CLIENT_SECRET,
-#         'client_id': CLIENT_ID,
-#         'grant_type': 'refresh_token'}
-#     r = requests.get(url, data=refresh_payload).json()
-#     access_token = r["access_token"]
-#     return {"authorization": f"Bearer {access_token}"}
+def generate_new_token():
+    url = "https://cloud.lightspeedapp.com/oauth/access_token.php"
+    refresh_payload = {
+        'refresh_token': REFRESH_TOKEN,
+        'client_secret': CLIENT_SECRET,
+        'client_id': CLIENT_ID,
+        'grant_type': 'refresh_token'}
+    r = requests.get(url, data=refresh_payload).json()
+    access_token = r["access_token"]
+    return {"authorization": f"Bearer {access_token}"}
 
 
 def success_email(payload):
