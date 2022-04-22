@@ -15,4 +15,4 @@ The purpose of this app is to assist stores with the lightspeed omnichannel solu
 | CLIENT_SECRET | client Secret from lightspeed retail | Yes | 
 | REFRESH_TOKEN | refresh token from lightspeed retail | Yes | 
 
-
+*Additional set up is required for setting up webhooks in lightspeed ecom
